@@ -19,16 +19,18 @@ MONTHS = [
   ["Dec", "December"],
 ]
 
+YEARS = range(2020, datetime.date.today().year + 1)
+
 
 def flatten(t):
   return [item for sublist in t for item in sublist]
 
 
 YEAR_REGEX = re.compile(
-  "(?<=[\D^])(2019|2020|2021|2022|2023|2024|2025|2026)(?=\D|$)", re.M)
+  "(?<=[\\D^])({})(?=\\D|$)".format("|".join([str(y) for y in YEARS])), re.M)
 MONTH_REGEX = re.compile(
-  "(?<=[\W^])({})(?=\W|$)".format("|".join(flatten(MONTHS))), re.M)
-DAY_REGEX = re.compile("(?<=[\D^])([0-9]{1,2})(?:st|nd|rd|th)(?=\W|$)", re.M)
+  "(?<=[\\W^])({})(?=\\W|$)".format("|".join(flatten(MONTHS))), re.M)
+DAY_REGEX = re.compile("(?<=[\\D^])([0-9]{1,2})(?:st|nd|rd|th)(?=\\W|$)", re.M)
 
 
 def find_date_range(text, ref_date=None, tz=None):

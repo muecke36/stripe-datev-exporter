@@ -21,11 +21,12 @@ import dotenv
 
 dotenv.load_dotenv()
 
-if "STRIPE_API_KEY" not in os.environ:
-  print("Require STRIPE_API_KEY environment variable to be set")
-  sys.exit(1)
+# if "STRIPE_API_KEY" not in os.environ:
+#   print("Require STRIPE_API_KEY environment variable to be set")
+#   sys.exit(1)
 
-stripe.api_key = os.environ["STRIPE_API_KEY"]
+# stripe.api_key = os.environ["STRIPE_API_KEY"]
+stripe.api_key = "sk_live_TVqpOaFfSGa3gofhg9DIT0rv00J4vj39hR"
 stripe.api_version = "2020-08-27"
 
 out_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'out')
@@ -187,46 +188,46 @@ class StripeDatevCli(object):
 
     # PDF
 
-    pdfDir = os.path.join(out_dir, 'pdf')
-    if not os.path.exists(pdfDir):
-      os.mkdir(pdfDir)
+    # pdfDir = os.path.join(out_dir, 'pdf')
+    # if not os.path.exists(pdfDir):
+    #   os.mkdir(pdfDir)
 
-    for invoice in invoices:
-      pdfLink = invoice.invoice_pdf
-      finalized_date = datetime.fromtimestamp(
-        invoice.status_transitions.finalized_at, timezone.utc).astimezone(stripe_datev.config.accounting_tz)
-      invNo = invoice.number
+    # for invoice in invoices:
+    #   pdfLink = invoice.invoice_pdf
+    #   finalized_date = datetime.fromtimestamp(
+    #     invoice.status_transitions.finalized_at, timezone.utc).astimezone(stripe_datev.config.accounting_tz)
+    #   invNo = invoice.number
 
-      fileName = "{} {}.pdf".format(finalized_date.strftime("%Y-%m-%d"), invNo)
-      filePath = os.path.join(pdfDir, fileName)
-      if os.path.exists(filePath):
-        # print("{} exists, skipping".format(filePath))
-        continue
+    #   fileName = "{} {}.pdf".format(finalized_date.strftime("%Y-%m-%d"), invNo)
+    #   filePath = os.path.join(pdfDir, fileName)
+    #   if os.path.exists(filePath):
+    #     # print("{} exists, skipping".format(filePath))
+    #     continue
 
-      print("Downloading {} to {}".format(pdfLink, filePath))
-      r = requests.get(pdfLink)
-      if r.status_code != 200:
-        print("HTTP status {}".format(r.status_code))
-        continue
-      with open(filePath, "wb") as fp:
-        fp.write(r.content)
+    #   print("Downloading {} to {}".format(pdfLink, filePath))
+    #   r = requests.get(pdfLink)
+    #   if r.status_code != 200:
+    #     print("HTTP status {}".format(r.status_code))
+    #     continue
+    #   with open(filePath, "wb") as fp:
+    #     fp.write(r.content)
 
-    for charge in charges:
-      fileName = "{} {}.html".format(datetime.fromtimestamp(
-        charge.created, timezone.utc).strftime("%Y-%m-%d"), charge.receipt_number or charge.id)
-      filePath = os.path.join(pdfDir, fileName)
-      if os.path.exists(filePath):
-        # print("{} exists, skipping".format(filePath))
-        continue
+    # for charge in charges:
+    #   fileName = "{} {}.html".format(datetime.fromtimestamp(
+    #     charge.created, timezone.utc).strftime("%Y-%m-%d"), charge.receipt_number or charge.id)
+    #   filePath = os.path.join(pdfDir, fileName)
+    #   if os.path.exists(filePath):
+    #     # print("{} exists, skipping".format(filePath))
+    #     continue
 
-      pdfLink = charge["receipt_url"]
-      print("Downloading {} to {}".format(pdfLink, filePath))
-      r = requests.get(pdfLink)
-      if r.status_code != 200:
-        print("HTTP status {}".format(r.status_code))
-        continue
-      with open(filePath, "wb") as fp:
-        fp.write(r.content)
+    #   pdfLink = charge["receipt_url"]
+    #   print("Downloading {} to {}".format(pdfLink, filePath))
+    #   r = requests.get(pdfLink)
+    #   if r.status_code != 200:
+    #     print("HTTP status {}".format(r.status_code))
+    #     continue
+    #   with open(filePath, "wb") as fp:
+    #     fp.write(r.content)
 
     # Warnings about changes to earlier invoices
 
