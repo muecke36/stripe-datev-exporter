@@ -133,11 +133,6 @@ def createAccountingRecords(charges):
 
     balance_transaction = stripe.BalanceTransaction.retrieve(
       charge.balance_transaction)
-    assert len(balance_transaction.fee_details) == 1
-    assert balance_transaction.fee_details[0].currency == "eur"
-    fee_amount = decimal.Decimal(
-      balance_transaction.fee_details[0].amount) / 100
-    fee_desc = balance_transaction.fee_details[0].description
 
     if charge.invoice:
       invoice = invoices.retrieveInvoice(charge.invoice)
@@ -156,15 +151,17 @@ def createAccountingRecords(charges):
       "Belegfeld 1": number,
     })
 
-    records.append({
-      "date": created,
-      "Umsatz (ohne Soll/Haben-Kz)": output.formatDecimal(fee_amount),
-      "Soll/Haben-Kennzeichen": "S",
-      "WKZ Umsatz": "EUR",
-      "Konto": str(config.accounts["stripe_fees"]),
-      "Gegenkonto (ohne BU-Schlüssel)": str(config.accounts["bank"]),
-      "Buchungstext": "{} ({})".format(fee_desc or "Stripe Fee", charge.id),
-    })
+    for fee in balance_transaction.fee_details:
+      assert fee.currency == "eur"
+      records.append({
+        "date": created,
+        "Umsatz (ohne Soll/Haben-Kz)": output.formatDecimal(decimal.Decimal(fee.amount) / 100),
+        "Soll/Haben-Kennzeichen": "S",
+        "WKZ Umsatz": "EUR",
+        "Konto": str(config.accounts["stripe_fees"]),
+        "Gegenkonto (ohne BU-Schlüssel)": str(config.accounts["bank"]),
+        "Buchungstext": "{} ({})".format(fee.description or "Stripe Fee", charge.id),
+      })
 
     if charge.refunded or len(charge.refunds.data) > 0:
       assert len(charge.refunds.data) == 1
