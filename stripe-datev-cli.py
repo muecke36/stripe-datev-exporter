@@ -25,8 +25,8 @@ dotenv.load_dotenv()
 #   print("Require STRIPE_API_KEY environment variable to be set")
 #   sys.exit(1)
 
-# stripe.api_key = os.environ["STRIPE_API_KEY"]
-stripe.api_key = "sk_live_TVqpOaFfSGa3gofhg9DIT0rv00J4vj39hR"
+stripe.api_key = os.environ["STRIPE_API_KEY"]
+# stripe.api_key = "sk_live_TVqpOaFfSGa3gofhg9DIT0rv00J4vj39hR"
 stripe.api_version = "2020-08-27"
 
 out_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'out')

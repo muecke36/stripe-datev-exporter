@@ -279,49 +279,50 @@ def createAccountingRecords(revenue_item):
           credited_at is not None and credited_at.strftime("%Y-%m") == created.strftime("%Y-%m") and credited_amount == amount_with_tax:
     return records
 
-  for line_item in line_items:
-    amount_with_tax = line_item["amount_with_tax"]
-    recognition_start = line_item["recognition_start"]
-    recognition_end = line_item["recognition_end"]
-    text = line_item["text"]
+  if len(config.accounts["prap"]) > 0:
+    for line_item in line_items:
+      amount_with_tax = line_item["amount_with_tax"]
+      recognition_start = line_item["recognition_start"]
+      recognition_end = line_item["recognition_end"]
+      text = line_item["text"]
 
-    months = recognition.split_months(
-      recognition_start, recognition_end, [amount_with_tax])
+      months = recognition.split_months(
+        recognition_start, recognition_end, [amount_with_tax])
 
-    base_months = list(filter(lambda month: month["start"] <= created, months))
-    base_amount = sum(map(lambda month: month["amounts"][0], base_months))
+      base_months = list(filter(lambda month: month["start"] <= created, months))
+      base_amount = sum(map(lambda month: month["amounts"][0], base_months))
 
-    forward_amount = amount_with_tax - base_amount
+      forward_amount = amount_with_tax - base_amount
 
-    forward_months = list(
-      filter(lambda month: month["start"] > created, months))
+      forward_months = list(
+        filter(lambda month: month["start"] > created, months))
 
-    if len(forward_months) > 0 and forward_amount != 0:
-      records.append({
-        "date": created,
-        "Umsatz (ohne Soll/Haben-Kz)": output.formatDecimal(forward_amount),
-        "Soll/Haben-Kennzeichen": "S",
-        "WKZ Umsatz": "EUR",
-        "Konto": accounting_props["revenue_account"],
-        "Gegenkonto (ohne BU-Schlüssel)": str(config.accounts["prap"]),
-        "Buchungstext": "pRAP nach {} / {}".format("{}..{}".format(forward_months[0]["start"].strftime("%Y-%m"), forward_months[-1]["start"].strftime("%Y-%m")) if len(forward_months) > 1 else forward_months[0]["start"].strftime("%Y-%m"), text),
-        "Belegfeld 1": number,
-        "EU-Land u. UStID": eu_vat_id,
-      })
-
-      for month in forward_months:
+      if len(forward_months) > 0 and forward_amount != 0:
         records.append({
-          # If invoice was voided/etc., resolve all pRAP in that month, don't keep going into the future
-          "date": voided_at or marked_uncollectible_at or credited_at or month["start"],
-          "Umsatz (ohne Soll/Haben-Kz)": output.formatDecimal(month["amounts"][0]),
+          "date": created,
+          "Umsatz (ohne Soll/Haben-Kz)": output.formatDecimal(forward_amount),
           "Soll/Haben-Kennzeichen": "S",
           "WKZ Umsatz": "EUR",
-          "Konto": str(config.accounts["prap"]),
-          "Gegenkonto (ohne BU-Schlüssel)": accounting_props["revenue_account"],
-          "Buchungstext": "pRAP aus {} / {}".format(created.strftime("%Y-%m"), text),
+          "Konto": accounting_props["revenue_account"],
+          "Gegenkonto (ohne BU-Schlüssel)": str(config.accounts["prap"]),
+          "Buchungstext": "pRAP nach {} / {}".format("{}..{}".format(forward_months[0]["start"].strftime("%Y-%m"), forward_months[-1]["start"].strftime("%Y-%m")) if len(forward_months) > 1 else forward_months[0]["start"].strftime("%Y-%m"), text),
           "Belegfeld 1": number,
           "EU-Land u. UStID": eu_vat_id,
         })
+
+        for month in forward_months:
+          records.append({
+            # If invoice was voided/etc., resolve all pRAP in that month, don't keep going into the future
+            "date": voided_at or marked_uncollectible_at or credited_at or month["start"],
+            "Umsatz (ohne Soll/Haben-Kz)": output.formatDecimal(month["amounts"][0]),
+            "Soll/Haben-Kennzeichen": "S",
+            "WKZ Umsatz": "EUR",
+            "Konto": str(config.accounts["prap"]),
+            "Gegenkonto (ohne BU-Schlüssel)": accounting_props["revenue_account"],
+            "Buchungstext": "pRAP aus {} / {}".format(created.strftime("%Y-%m"), text),
+            "Belegfeld 1": number,
+            "EU-Land u. UStID": eu_vat_id,
+          })
 
   return records
 
